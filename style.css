@@ -1,0 +1,15 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+canvas {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 10px;
+}
+
+.status {
+  font-size: 1.2rem;
+  line-height: 2rem;
+}
