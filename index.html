@@ -8,11 +8,6 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- MQTT.js -->
-  <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,6 +15,12 @@
       background: #f4f4f4;
       margin: 0;
       padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background: #121212;
+      color: #e0e0e0;
     }
 
     canvas {
@@ -31,42 +32,102 @@
       width: 600px !important;
     }
 
-    .botoes {
+    body.dark canvas {
+      background: #1e1e1e;
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+
+    .botoes, .config {
       margin-top: 30px;
       display: flex;
       justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
     }
+
+    .status {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      line-height: 1.8rem;
+    }
+
+    .valor-atual {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #333;
+      margin-top: 10px;
+    }
+
+    body.dark .valor-atual {
+      color: #e0e0e0;
+    }
+
+    button.on {
+      background-color: #dc3545 !important;
+      color: white;
+    }
+
+    button.off {
+      background-color: #198754 !important;
+      color: white;
+    }
+
+    /* Botão de modo escuro fixo no canto superior direito */
+    #darkModeButton {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 1.8rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
+
 <body>
   <h2 id="titulo">Climatizador Automático</h2>
 
   <div class="graficos d-flex justify-content-center flex-wrap gap-4 mt-3">
     <div>
       <h3>Temperatura (°C)</h3>
-      <canvas id="graficoTemp"></canvas>
+      <canvas id="tempChart"></canvas>
+      <div id="tempValue" class="valor-atual">- °C</div>
     </div>
 
     <div>
       <h3>Umidade (%)</h3>
-      <canvas id="graficoHum"></canvas>
+      <canvas id="humChart"></canvas>
+      <div id="humValue" class="valor-atual">- %</div>
     </div>
   </div>
 
   <div class="status mt-4">
-    🔥 Ar Quente: <span id="arQuente" class="text-secondary">Desligado</span><br>
-    ❄️ Ar Frio: <span id="arFrio" class="text-secondary">Desligado</span><br>
-    💧 Umidificador: <span id="umidificador" class="text-secondary">Desligado</span>
+    🔥 Ar Quente: <span id="statusArQuente" style="color:red;">Desligado</span><br>
+    ❄️ Ar Frio: <span id="statusArFrio" style="color:red;">Desligado</span><br>
+    💧 Umidificador: <span id="statusUmidificador" style="color:red;">Desligado</span>
   </div>
 
   <div class="botoes">
-    <button id="toggleData" class="btn btn-primary">⏸️ Pausar Dados</button>
-    <button id="toggleMode" class="btn btn-secondary">🌙 Dark Mode</button>
+    <button id="btnArQuente" class="btn off">Ligar Ar Quente</button>
+    <button id="btnArFrio" class="btn off">Ligar Ar Frio</button>
+    <button id="btnUmidificador" class="btn off">Ligar Umidificador</button>
   </div>
 
-  <!-- Script JS -->
+  <div class="config">
+    <button id="pauseButton" class="btn btn-warning">⏸️ Pausar Gráficos</button>
+  </div>
+
+  <!-- Botão de modo escuro fixo apenas com emoji -->
+  <button id="darkModeButton" class="btn btn-secondary">🌙</button>
+
+  <!-- Importações -->
+  <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
