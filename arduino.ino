@@ -1,15 +1,13 @@
 #include <DHT.h>
+
 #define DHTPIN 2
 #define DHTTYPE DHT11
-DHT dht(DHTPIN, DHTTYPE);
 
 #define MOTOR_AR_QUENTE 8
 #define MOTOR_AR_FRIO 9
 #define MOTOR_UMIDIFICADOR 10
 
-bool estadoArQuente = false;
-bool estadoArFrio = false;
-bool estadoUmidificador = false;
+DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
   Serial.begin(9600);
@@ -18,42 +16,47 @@ void setup() {
   pinMode(MOTOR_AR_QUENTE, OUTPUT);
   pinMode(MOTOR_AR_FRIO, OUTPUT);
   pinMode(MOTOR_UMIDIFICADOR, OUTPUT);
+
+  digitalWrite(MOTOR_AR_QUENTE, LOW);
+  digitalWrite(MOTOR_AR_FRIO, LOW);
+  digitalWrite(MOTOR_UMIDIFICADOR, LOW);
 }
 
 void loop() {
   float temperatura = dht.readTemperature();
   float umidade = dht.readHumidity();
 
-  if (!isnan(temperatura) && !isnan(umidade)) {
-    Serial.print("{\"temperatura\":");
-    Serial.print(temperatura);
-    Serial.print(",\"umidade\":");
-    Serial.print(umidade);
-    Serial.print(",\"arQuente\":");
-    Serial.print(estadoArQuente ? "true" : "false");
-    Serial.print(",\"arFrio\":");
-    Serial.print(estadoArFrio ? "true" : "false");
-    Serial.print(",\"umidificador\":");
-    Serial.print(estadoUmidificador ? "true" : "false");
-    Serial.println("}");
+  if (isnan(temperatura) || isnan(umidade)) {
+    Serial.println("{\"error\":\"Erro ao ler o sensor DHT11\"}");
+    delay(2000);
+    return;
   }
 
-  // Recebe comandos
-  if (Serial.available()) {
-    String comando = Serial.readStringUntil('\n');
-    if (comando.indexOf("arQuente") > 0) {
-      estadoArQuente = !estadoArQuente;
-      digitalWrite(MOTOR_AR_QUENTE, estadoArQuente);
-    }
-    if (comando.indexOf("arFrio") > 0) {
-      estadoArFrio = !estadoArFrio;
-      digitalWrite(MOTOR_AR_FRIO, estadoArFrio);
-    }
-    if (comando.indexOf("umidificador") > 0) {
-      estadoUmidificador = !estadoUmidificador;
-      digitalWrite(MOTOR_UMIDIFICADOR, estadoUmidificador);
-    }
+  // === Envia dados em JSON para o Node.js ===
+  Serial.print("{\"temperatura\":");
+  Serial.print(temperatura);
+  Serial.print(",\"umidade\":");
+  Serial.print(umidade);
+  Serial.println("}");
+
+  // === Controle automático dos motores ===
+  if (temperatura < 11) {
+    digitalWrite(MOTOR_AR_QUENTE, HIGH);
+    digitalWrite(MOTOR_AR_FRIO, LOW);
+  } else if (temperatura > 23) {
+    digitalWrite(MOTOR_AR_FRIO, HIGH);
+    digitalWrite(MOTOR_AR_QUENTE, LOW);
+  } else {
+    digitalWrite(MOTOR_AR_FRIO, LOW);
+    digitalWrite(MOTOR_AR_QUENTE, LOW);
   }
 
+  if (umidade < 40) {
+    digitalWrite(MOTOR_UMIDIFICADOR, HIGH);
+  } else {
+    digitalWrite(MOTOR_UMIDIFICADOR, LOW);
+  }
+
+  // Espera 2 segundos antes da próxima leitura
   delay(2000);
 }

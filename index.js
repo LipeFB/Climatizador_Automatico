@@ -17,14 +17,21 @@ client.on("connect", () => {
   client.subscribe(topicoControle);
 });
 
-// Recebe dados do Arduino e envia para o MQTT
+// Recebe dados do Arduino e envia para o MQTT (filtrando linhas que não sejam JSON)
 parser.on("data", (data) => {
-  try {
-    const json = JSON.parse(data);
-    client.publish(topicoDados, JSON.stringify(json));
-    console.log("📡 Dados enviados:", json);
-  } catch (err) {
-    console.error("Erro ao converter dados:", err.message);
+  data = data.trim();
+
+  if (data.startsWith("{") && data.endsWith("}")) {
+    try {
+      const json = JSON.parse(data);
+      client.publish(topicoDados, JSON.stringify(json));
+      console.log("📡 Dados enviados:", json);
+    } catch (err) {
+      console.error("❌ JSON inválido:", err.message);
+    }
+  } else {
+    // apenas log para mensagens de debug do Arduino
+    console.log("💬 Arduino:", data);
   }
 });
 
